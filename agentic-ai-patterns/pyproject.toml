@@ -1,0 +1,16 @@
+[project]
+name = "agentic-ai-patterns"
+version = "0.1.0"
+description = "Part 1: Single vs Multi-Agent systems and the 7 core agent patterns, built on Microsoft Agent Framework."
+requires-python = ">=3.11"
+dependencies = [
+    "agent-framework>=0.1.0",
+    "agent-framework-foundry>=0.1.0",
+    "azure-identity>=1.19",
+    "python-dotenv>=1.0",
+    "pydantic>=2.7",
+]
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
