@@ -1,8 +1,7 @@
 """
 common/client.py
 ==================
-Same shared connection pattern used throughout the course. Kept short
-here since students have already seen this in earlier modules.
+Same shared connection pattern used throughout the course.
 """
 import os
 

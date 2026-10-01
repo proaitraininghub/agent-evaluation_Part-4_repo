@@ -61,7 +61,7 @@ async def main():
     print("The next call will pause at send_email until a human approves it.")
     print("In a real deployment this surfaces through your approval channel")
     print("(Teams/email/a CLI prompt) -- exactly like Deploy-Approval-Agent")
-    print("and Approval-Execution-Agent in the earlier enterprise projects.\n")
+    print("\n")
     result = await agent.run(
         "Send an email to team@example.com with subject 'Status' and a short "
         "one-line body saying the demo is working."

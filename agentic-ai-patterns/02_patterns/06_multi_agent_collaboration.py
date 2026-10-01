@@ -26,27 +26,47 @@ sentence with a concrete fact or example. Output the outline with each
 bullet followed by its supporting sentence.
 """
 
-EDITOR_INSTRUCTIONS = """\
+EDITOR_INSTRUCTIONS = """
 You take a drafted report (outline + supporting sentences) and tighten
 it into a single flowing paragraph, removing bullet formatting.
 """
 
 
+def _preview(text: str, limit: int = 160) -> str:
+    """Trim long handoff text for a readable log line."""
+    text = " ".join(text.split())
+    return text if len(text) <= limit else text[:limit] + "..."
+
+
 class AgentStep(Executor):
-    def __init__(self, id: str, agent):
+    def __init__(self, id: str, agent, is_final: bool = False):
         super().__init__(id=id)
         self.agent = agent
+        self.is_final = is_final
 
     @handler
-    async def run_agent(self, input_text: str, ctx: WorkflowContext[str]) -> None:
+    async def run_agent(self, input_text: str, ctx: WorkflowContext[str, str]) -> None:
+        # --- Log what this agent received, before it does anything ---
+        print(f"  [{self.agent.name}] received input:")
+        print(f"    {_preview(input_text)}")
+
         result = await self.agent.run(input_text)
-        await ctx.send_message(str(result))
+        output_text = result.text
+
+        # --- Log what this agent produced, i.e. its "thinking made visible" ---
+        print(f"  [{self.agent.name}] produced output:")
+        print(f"    {_preview(output_text)}\n")
+
+        if self.is_final:
+            await ctx.yield_output(output_text)
+        else:
+            await ctx.send_message(output_text)
 
 
 async def main():
     outline_step = AgentStep(id="outline", agent=make_agent("Outline-Agent", OUTLINE_INSTRUCTIONS))
     details_step = AgentStep(id="details", agent=make_agent("Details-Agent", DETAILS_INSTRUCTIONS))
-    editor_step = AgentStep(id="edit", agent=make_agent("Editor-Agent", EDITOR_INSTRUCTIONS))
+    editor_step = AgentStep(id="edit", agent=make_agent("Editor-Agent", EDITOR_INSTRUCTIONS), is_final=True)
 
     workflow = (
         WorkflowBuilder(start_executor=outline_step)
@@ -55,9 +75,12 @@ async def main():
         .build()
     )
 
+    print("=== Collaborative report (Outline-Agent -> Details-Agent -> Editor-Agent) ===\n")
     events = await workflow.run("The tradeoffs between single-agent and multi-agent system design.")
-    print("=== Collaborative report (Outline-Agent -> Details-Agent -> Editor-Agent) ===")
-    print(events.get_outputs())
+
+    print("=== Final merged report ===")
+    for output in events.get_outputs():
+        print(output)
 
 
 if __name__ == "__main__":
